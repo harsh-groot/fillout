@@ -35,7 +35,8 @@ function routes() {
 
       const result = responseData.responses.map(o => {
         var filteredObjects = applyFilters(o.questions, (req.query.filters && JSON.parse(req.query.filters)) || []);
-        o.questions = filteredObjects;
+        if (filteredObjects.length > 0)
+          o.questions = filteredObjects;
         return o;
       });
 
