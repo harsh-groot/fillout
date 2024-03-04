@@ -1,7 +1,6 @@
 const express = require('express');
 const axios = require('axios');
 const applyFilters = require('../filters');
-const mockJson = require('../mock/mock.json');
 function routes() {
   const formsRouter = express.Router();
 
@@ -27,18 +26,20 @@ function routes() {
         'Authorization': `Bearer ${token}`
       };
 
-      //const response = await axios.get('https://api.fillout.com/v1/api/forms/' + req.params.formId, { headers });
-      const response = mockJson;
-      console.log("filteredObjects11", mockJson);
+      const response = await axios.get('https://api.fillout.com/v1/api/forms/' + req.params.formId + '/submissions', { headers });
+
       // Extract the data from the response
-      //let responseData = response.data;
-      let responseData = JSON.parse(JSON.stringify(response));
+      let responseData = response.data;
 
-      //var filteredObjects = applyFilters(responseData, JSON.parse(req.query.filters) || []);
-      var filteredObjects = applyFilters(responseData, JSON.parse(req.query.filters) || []);
+      //console.log(responseData);
 
-      responseData.questions = filteredObjects;
+      const result = responseData.responses.map(o => {
+        var filteredObjects = applyFilters(o.questions, JSON.parse(req.query.filters) || []);
+        o.questions = filteredObjects;
+        return o;
+      });
 
+      responseData.responses = result;
       return res.json(responseData);
 
     });
