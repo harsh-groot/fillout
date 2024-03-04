@@ -31,7 +31,7 @@ function routes() {
       // Extract the data from the response
       let responseData = response.data;
 
-      console.log(responseData);
+      //console.log(responseData);
 
       const result = responseData.responses.map(o => {
         var filteredObjects = applyFilters(o.questions, JSON.parse(req.query.filters) || []);
