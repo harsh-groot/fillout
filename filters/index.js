@@ -1,43 +1,59 @@
-function applyFilters(itemsToFilter, filters, objectName = "questions") {
-    var list = itemsToFilter[objectName];
-    return list.filter(item => {
-        let passesAllFilters = false;
-        for (const { id, condition, value } of filters) {
-            if (item["id"] == id) {
-                switch (condition) {
-                    case "equals":
-                        if (item["value"] == value) {
-                            passesAllFilters = true;
-                        }
-                        break;
-                    case "greater_than":
-                        if (item["value"] > value) {
-                            passesAllFilters = true;
-                        }
-                        break;
-                    case "less_than":
-                        if (item["value"] < value) {
-                            passesAllFilters = true;
-                        }
-                        break;
-                    case "does_not_equal":
-                        if (item["value"] !== value) {
-                            passesAllFilters = true;
-                        }
-                        break;
-                    // Add more cases for other conditions if needed
-                }
-            }
+function applyFilters(itemsToFilter, filters) {
 
-            // If the item fails any condition, no need to check further, exit the loop
-            if (passesAllFilters) {
-                break;
+    const predicates = {
+        equals: (key, value) => (obj) => {
+            if (obj.type == "DatePicker" && isValiDate(obj.value) && isValiDate(value)) {
+                return parseInt(new Date(obj.value).getTime()) === parseInt(new Date(value).getTime());
             }
+            else {
+                return obj.value == value;
+            }
+        },
+        does_not_equal: (key, value) => (obj) => {
+            if (obj.type == "DatePicker" && isValiDate(obj.value) && isValiDate(value)) {
+                return parseInt(new Date(obj.value).getTime()) !== parseInt(new Date(value).getTime());
+            }
+            else {
+                return obj.value != value;
+            }
+        },
+        greater_than: (key, value) => (obj) => {
+            if (obj.type == "DatePicker" && isValiDate(obj.value) && isValiDate(value)) {
+                return new Date(obj.value).getTime() >= new Date(value).getTime();
+            }
+            else if (!isNaN(obj.value) && !isNaN(value)) {
+                return obj.value >= value;
+            }
+            return false;
+        },
+        less_than: (key, value) => (obj) => {
+            if (obj.type == "DatePicker" && isValiDate(obj.value) && isValiDate(value)) {
+                return new Date(obj.value).getTime() <= new Date(value).getTime();
+            }
+            else if (!isNaN(obj.value)) {
+                return obj.value <= value;
+            }
+            return false;
+        },
+    };
+
+    const filteredConditions = filters.map(({ condition, id, value }) => predicates[condition](id, value));
+
+    let result = [];
+    for (const condition1 of filteredConditions) {
+        const filteredItems = itemsToFilter.filter(condition1);
+        if (filteredItems.length > 0) {
+            result = [...result, ...filteredItems];
+        } else {
+            // If any condition fails, break out of the loop
+            result = [];
+            break;
         }
+    }
 
-        // Return true only if the item passes all filter conditions
-        return passesAllFilters;
-    });
+    return result;
 }
-
+function isValiDate(value) {
+    return value instanceof Date && value instanceof Date && !isNaN(new Date(value).getTime())
+}
 module.exports = applyFilters;
